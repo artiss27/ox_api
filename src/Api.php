@@ -17,7 +17,7 @@ class Api implements ApiInterface
     public function __construct(string $HASH_SECRET = '')
     {
         self::$HASH_SECRET = $HASH_SECRET ?: (class_exists('Config') ? Config::get('API_HASH_SECRET') : '');
-        self::$logDir      = self::$logDir ?: dirname(__DIR__, 4) . '/';
+        self::$logDir      = self::$logDir ?: dirname(__DIR__, 4) . '/log/';
 
         if (!self::$HASH_SECRET) {
             $this->log('Wrong api call params!', 'error');
@@ -34,7 +34,7 @@ class Api implements ApiInterface
         throw new \Exception($error);
     }
 
-    public function log($data, $method = 'debug', $fileName = 'api_err.log')
+    public function log($data, $method = 'debug', $fileName = '!api_err.log')
     {
         if (in_array($method, ['warning', 'error', 'info', 'debug'])) {
             $log = new Logger('name');

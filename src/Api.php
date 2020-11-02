@@ -19,6 +19,7 @@ class Api implements ApiInterface
         self::$HASH_SECRET = $HASH_SECRET ?: (class_exists('Config') ? Config::get('API_HASH_SECRET') : '');
 
         if (!self::$HASH_SECRET) {
+            $this->log('Wrong api call params!', 'error');
             $this->setError('Empty secret hash!');
         }
     }

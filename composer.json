@@ -10,7 +10,9 @@
     }
   ],
   "require": {
-    "php": ">=7.4.0"
+    "php": ">=7.4",
+    "ext-curl": "*",
+    "ext-json": "*"
   },
   "autoload": {
     "classmap": ["src"]

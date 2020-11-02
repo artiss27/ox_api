@@ -1,25 +1,59 @@
 <?php
 
-class Api
+class Api implements ApiInterface
 {
-    private static string $HASH_SECRET;
+    private static string $HASH_SECRET = '';
     private const HASH_ALGORITHM = 'sha256';
+    private static $logger;
 
-    public function __construct()
+    /**
+     * Api constructor.
+     * @param string $HASH_SECRET
+     * @throws Exception
+     */
+    public function __construct(string $HASH_SECRET = '')
     {
-        self::$HASH_SECRET = Config::get('API_HASH_SECRET');
+        self::$HASH_SECRET = $HASH_SECRET ?: (class_exists('Config') ? Config::get('API_HASH_SECRET') : '');
+        self::$logger      = function_exists('addToLog') ? addToLog : '';
+
+        if (!self::$HASH_SECRET) {
+            $this->setError('Empty secret hash!');
+        }
     }
 
+    /**
+     * @param string $error
+     * @throws Exception
+     */
+    private function setError(string $error)
+    {
+        throw new \Exception($error);
+    }
+
+    /**
+     * @param        $data
+     * @param string $fileName
+     */
+    private function addToLog($data, string $fileName = '!api_err')
+    {
+        self::$logger($data, $fileName);
+    }
+
+    /**
+     * @param string $apiUrl
+     * @param string $action
+     * @param array  $params
+     * @return array|mixed
+     */
     public function apiCall(string $apiUrl, string $action, array $params = [])
     {
-        if (empty($apiUrl) || empty($action) || !is_array($params))
-        {
-            addToLog('Wrong api call params!');
-            addToLog('URL: ' . $apiUrl);
-            addToLog('Action: ' . $action);
-            addToLog('Params ' . json_encode($params));
+        if (empty($apiUrl) || empty($action) || !is_array($params)) {
+            $this->addToLog('Wrong api call params!');
+            $this->addToLog('URL: ' . $apiUrl);
+            $this->addToLog('Action: ' . $action);
+            $this->addToLog('Params ' . json_encode($params));
 
-            return [];
+            $this->setError('Wrong api call params!');
         }
 
         $params['action'] = $action;
@@ -28,36 +62,26 @@ class Api
 
         $ch = curl_init($url);
 
-        // curl_setopt($ch, CURLOPT_VERBOSE, true);
-        // $verbose = fopen('php://temp', 'wb+');
-        // curl_setopt($ch, CURLOPT_STDERR, $verbose);
-
         curl_setopt_array($ch, [
             CURLOPT_POST           => true,
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => false,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POSTFIELDS     => $params
+            CURLOPT_POSTFIELDS     => $params,
         ]);
-        $res = curl_exec($ch);
-        // addToLog($res);
+        $res    = curl_exec($ch);
         $result = json_decode($res, true);
 
         $errno = curl_errno($ch);
 
-        if (!$result || !empty($result['error']) || !empty($errno))
-        {
-            addToLog("apiURL: $apiUrl", '!api_err');
-            addToLog("action: $action", '!api_err');
-            addToLog($params, '!api_err');
-            addToLog('Invalid api call response: ' . json_encode($res), '!api_err');
-
-            addToLog($res, '!api_err');
-            // rewind($verbose);
-            // $verboseLog = stream_get_contents($verbose);
-            // addToLog("Verbose information:\n<pre>" . htmlspecialchars($verboseLog) . "</pre>\n", '!api_err');
-            addToLog('curl_errno: ' . $errno, '!api_err');
-            addToLog('curl_error: ' . htmlspecialchars(curl_error($ch)), '!api_err');
+        if (!$result || !empty($result['error']) || !empty($errno)) {
+            $this->addToLog("apiURL: $apiUrl");
+            $this->addToLog("action: $action");
+            $this->addToLog($params);
+            $this->addToLog('Invalid api call response: ' . json_encode($res));
+            $this->addToLog($res);
+            $this->addToLog('curl_errno: ' . $errno);
+            $this->addToLog('curl_error: ' . htmlspecialchars(curl_error($ch)));
         }
         curl_close($ch);
 
@@ -72,18 +96,17 @@ class Api
     public function isHashValid(string $hash, string $body): bool
     {
         $generatedHash = $this->generateHash($body);
-        $is_same = $generatedHash === $hash;
+        $is_same       = $generatedHash === $hash;
 
-        if (!$is_same)
-        {
-            addToLog('=',   'hash.txt');
-            addToLog($_REQUEST, 'hash.txt');
-            addToLog('generated:', 'hash.txt');
-            addToLog($generatedHash,   'hash.txt');
-            addToLog($body, 'hash.txt');
-            addToLog('- request:', 'hash.txt');
-            addToLog($hash,        'hash.txt');
-            addToLog('=',      'hash.txt');
+        if (!$is_same) {
+            $this->addToLog('=', 'hash.txt');
+            $this->addToLog($_REQUEST, 'hash.txt');
+            $this->addToLog('generated:', 'hash.txt');
+            $this->addToLog($generatedHash, 'hash.txt');
+            $this->addToLog($body, 'hash.txt');
+            $this->addToLog('- request:', 'hash.txt');
+            $this->addToLog($hash, 'hash.txt');
+            $this->addToLog('=', 'hash.txt');
         }
         return $is_same;
     }

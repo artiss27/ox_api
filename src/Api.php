@@ -2,9 +2,9 @@
 
 class Api implements ApiInterface
 {
-    private static string $HASH_SECRET = '';
-    private const HASH_ALGORITHM = 'sha256';
+    private static $HASH_SECRET = '';
     private static $logger;
+    private const HASH_ALGORITHM = 'sha256';
 
     /**
      * Api constructor.

@@ -6,7 +6,7 @@ use Monolog\Logger;
 class Api implements ApiInterface
 {
     private static $HASH_SECRET = '';
-    private static $logDir = '../../../../log/';
+    private static $logDir = '';
     private const HASH_ALGORITHM = 'sha256';
 
     /**
@@ -17,6 +17,7 @@ class Api implements ApiInterface
     public function __construct(string $HASH_SECRET = '')
     {
         self::$HASH_SECRET = $HASH_SECRET ?: (class_exists('Config') ? Config::get('API_HASH_SECRET') : '');
+        self::$logDir      = self::$logDir ?: dirname(__DIR__, 4) . '/';
 
         if (!self::$HASH_SECRET) {
             $this->log('Wrong api call params!', 'error');

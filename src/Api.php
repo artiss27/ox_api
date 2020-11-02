@@ -21,7 +21,7 @@ class Api implements ApiInterface
 
         if (!self::$HASH_SECRET) {
             $this->log('Wrong api call params!', 'error');
-            $this->setError('Empty secret hash!');
+//            $this->setError('Empty secret hash!');
         }
     }
 
@@ -58,7 +58,7 @@ class Api implements ApiInterface
             $this->log('Action: ' . $action, 'error');
             $this->log('Params ' . json_encode($params), 'error');
 
-            $this->setError('Wrong api call params!');
+//            $this->setError('Wrong api call params!');
         }
 
         $params['action'] = $action;

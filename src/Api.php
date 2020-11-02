@@ -1,9 +1,13 @@
 <?php
 
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
+
 class Api implements ApiInterface
 {
     private static $HASH_SECRET = '';
     private static $logger;
+    private static $logDir = '../../../../log/';
     private const HASH_ALGORITHM = 'sha256';
 
     /**
@@ -39,6 +43,16 @@ class Api implements ApiInterface
         self::$logger($data, $fileName);
     }
 
+
+    public function log($data, $method = 'debug', $fileName = 'api_err.log')
+    {
+        if (in_array($method, ['warning', 'error', 'info', 'debug'])) {
+            $log = new Logger('name');
+            $log->pushHandler(new StreamHandler(self::$logDir . $fileName, Logger::WARNING));
+            $log->$method($data);
+        }
+    }
+
     /**
      * @param string $apiUrl
      * @param string $action
@@ -48,10 +62,10 @@ class Api implements ApiInterface
     public function apiCall(string $apiUrl, string $action, array $params = [])
     {
         if (empty($apiUrl) || empty($action) || !is_array($params)) {
-            $this->addToLog('Wrong api call params!');
-            $this->addToLog('URL: ' . $apiUrl);
-            $this->addToLog('Action: ' . $action);
-            $this->addToLog('Params ' . json_encode($params));
+            $this->log('Wrong api call params!', 'error');
+            $this->log('URL: ' . $apiUrl, 'error');
+            $this->log('Action: ' . $action, 'error');
+            $this->log('Params ' . json_encode($params), 'error');
 
             $this->setError('Wrong api call params!');
         }
@@ -75,13 +89,13 @@ class Api implements ApiInterface
         $errno = curl_errno($ch);
 
         if (!$result || !empty($result['error']) || !empty($errno)) {
-            $this->addToLog("apiURL: $apiUrl");
-            $this->addToLog("action: $action");
-            $this->addToLog($params);
-            $this->addToLog('Invalid api call response: ' . json_encode($res));
-            $this->addToLog($res);
-            $this->addToLog('curl_errno: ' . $errno);
-            $this->addToLog('curl_error: ' . htmlspecialchars(curl_error($ch)));
+            $this->log("apiURL: $apiUrl", 'error');
+            $this->log("action: $action", 'error');
+            $this->log($params, 'error');
+            $this->log('Invalid api call response: ' . json_encode($res), 'error');
+            $this->log($res, 'error');
+            $this->log('curl_errno: ' . $errno, 'error');
+            $this->log('curl_error: ' . htmlspecialchars(curl_error($ch)), 'error');
         }
         curl_close($ch);
 
@@ -99,14 +113,14 @@ class Api implements ApiInterface
         $is_same       = $generatedHash === $hash;
 
         if (!$is_same) {
-            $this->addToLog('=', 'hash.txt');
-            $this->addToLog($_REQUEST, 'hash.txt');
-            $this->addToLog('generated:', 'hash.txt');
-            $this->addToLog($generatedHash, 'hash.txt');
-            $this->addToLog($body, 'hash.txt');
-            $this->addToLog('- request:', 'hash.txt');
-            $this->addToLog($hash, 'hash.txt');
-            $this->addToLog('=', 'hash.txt');
+            $this->log('=', 'warning', 'hash.log');
+            $this->log($_REQUEST, 'warning', 'hash.log');
+            $this->log('generated:', 'warning', 'hash.log');
+            $this->log($generatedHash, 'warning', 'hash.log');
+            $this->log($body, 'warning', 'hash.log');
+            $this->log('- request:', 'warning', 'hash.log');
+            $this->log($hash, 'warning', 'hash.log');
+            $this->log('=', 'warning', 'hash.log');
         }
         return $is_same;
     }

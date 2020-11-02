@@ -1,7 +1,7 @@
 {
   "name": "artiss27/ox_api",
   "description": "Main api class",
-  "type": "project",
+  "type": "library",
   "license": "MIT",
   "authors": [
     {
@@ -9,6 +9,7 @@
       "email": "ruslan@oxgaming.com"
     }
   ],
+  "minimum-stability": "stable",
   "require": {
     "php": ">=7.2",
     "monolog/monolog": "^2.1",

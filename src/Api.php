@@ -6,7 +6,6 @@ use Monolog\Logger;
 class Api implements ApiInterface
 {
     private static $HASH_SECRET = '';
-    private static $logger;
     private static $logDir = '../../../../log/';
     private const HASH_ALGORITHM = 'sha256';
 
@@ -18,7 +17,6 @@ class Api implements ApiInterface
     public function __construct(string $HASH_SECRET = '')
     {
         self::$HASH_SECRET = $HASH_SECRET ?: (class_exists('Config') ? Config::get('API_HASH_SECRET') : '');
-        self::$logger      = function_exists('addToLog') ? addToLog : '';
 
         if (!self::$HASH_SECRET) {
             $this->setError('Empty secret hash!');
@@ -34,16 +32,6 @@ class Api implements ApiInterface
         throw new \Exception($error);
     }
 
-    /**
-     * @param        $data
-     * @param string $fileName
-     */
-    private function addToLog($data, string $fileName = '!api_err')
-    {
-        self::$logger($data, $fileName);
-    }
-
-
     public function log($data, $method = 'debug', $fileName = 'api_err.log')
     {
         if (in_array($method, ['warning', 'error', 'info', 'debug'])) {
@@ -58,6 +46,7 @@ class Api implements ApiInterface
      * @param string $action
      * @param array  $params
      * @return array|mixed
+     * @throws Exception
      */
     public function apiCall(string $apiUrl, string $action, array $params = [])
     {

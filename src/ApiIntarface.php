@@ -9,6 +9,7 @@ interface ApiInterface
      * @param string $action
      * @param array  $params
      * @return array|mixed
+     * @throws Exception
      */
     public function apiCall(string $apiUrl, string $action, array $params = []);
 
